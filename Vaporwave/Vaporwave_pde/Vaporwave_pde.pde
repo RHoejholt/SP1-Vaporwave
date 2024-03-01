@@ -11,12 +11,15 @@ int centerY, centerX;
 int scl = 15;
 int cols, rows;
 int w, h;
-int t = 0;
+
 
 float hillHeight;
 float moving = 0;
 
 float [][] landscape;
+
+Moon m1;
+Moon m2;
 
 void setup() {
   w = 1200;
@@ -31,7 +34,9 @@ void setup() {
   centerY = height/2;
   centerX = width/2;
 
-
+  //create moon objects
+  m1 = new Moon(25);
+  m2 = new Moon(45);
 
   landscape = new float[cols][rows];
 }
@@ -90,24 +95,19 @@ void draw () {
 
   drawGrid();
 
+  // draw the moons
 
-  // set new position for moons
-
-  moveMoon();
-
-
-  //Draw the moons
-
-  Moon m1 = new Moon(25);
+  m1.drawMoon();
+  m2.drawMoon();
 }
 
 void drawSky() {
-  
+
   //define the start and end colors of the sky
-  
+
   color startColor = color(40, 24, 80);
   color endColor = color(240, 85, 100);
-  
+
   drawGradient(0, height, startColor, endColor);
 
   //Draw the sun
@@ -128,11 +128,11 @@ void drawGradient (float startY, float endY, color colorStart, color colorEnd) {
     line(-82110, 11111+y, 5*width, y+500, -1000, -1000);
   }
 }
-void drawGradientLines (float startY, float endY,  color colorStart, color colorEnd) {
+void drawGradientLines (float startY, float endY, color colorStart, color colorEnd) {
   for (int y = 0; y < height/1.5; y++) {
     if (y > centerY+20 && y<centerY+45 || y > centerY+55 && y<centerY+75 ||  y > centerY+80 && y<centerY+95 || y > centerY+100 && y<centerY+102) {
       float inter = map(y, startY-20, endY-170, 0, 1);
-      color c = lerpColor(colorStart, colorEnd,  inter);
+      color c = lerpColor(colorStart, colorEnd, inter);
       stroke(c);
       line(390, y-200, width-390, y-200);
     }
@@ -157,11 +157,7 @@ void drawGrid() {
 }
 
 
-void moveMoon () {
 
-  translate(t, +1000, 240);
-  t += 8;
-}
 
 void  drawClouds() {
   fill(255);
