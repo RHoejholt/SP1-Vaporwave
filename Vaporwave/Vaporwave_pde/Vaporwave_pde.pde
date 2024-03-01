@@ -3,7 +3,6 @@
 //adaptive to window size
 //moon + cloud behavior and array
 
-
 int centerY, centerX;
 
 // set vertex scale
@@ -12,14 +11,13 @@ int scl = 15;
 int cols, rows;
 int w, h;
 
-
 float hillHeight;
 float moving = 0;
 
 float [][] landscape;
 
-Moon m1;
-Moon m2;
+Moon [] moons = new Moon[10];
+
 
 void setup() {
   w = 1200;
@@ -35,8 +33,9 @@ void setup() {
   centerX = width/2;
 
   //create moon objects
-  m1 = new Moon(25);
-  m2 = new Moon(45);
+  for(int i = 0; i < moons.length; i++){
+  moons[i] = new Moon();
+  }
 
   landscape = new float[cols][rows];
 }
@@ -91,14 +90,11 @@ void draw () {
   translate(width/2, height/2);
   rotateX(PI/2.5);
 
-  //Draw the grid
-
   drawGrid();
 
-  // draw the moons
-
-  m1.drawMoon();
-  m2.drawMoon();
+  for(Moon m : moons){
+  m.drawMoon();
+  }
 }
 
 void drawSky() {
