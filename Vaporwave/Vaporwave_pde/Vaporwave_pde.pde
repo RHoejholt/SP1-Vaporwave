@@ -18,6 +18,7 @@ float [][] landscape;
 
 Moon [] moons = new Moon[10];
 
+ArrayList<Clouds> clouds = new ArrayList<>();
 
 void setup() {
   w = 1200;
@@ -54,7 +55,7 @@ void draw () {
 
 
 
-  // moving sets the speed
+  // "moving" sets the speed
 
   moving -= 0.008;
 
@@ -87,6 +88,7 @@ void draw () {
     }
   }
   drawClouds();
+  
   translate(width/2, height/2);
   rotateX(PI/2.5);
 
@@ -150,12 +152,4 @@ void drawGrid() {
     }
     endShape();
   }
-}
-
-
-
-
-void  drawClouds() {
-  fill(255);
-  ellipse(width*0.2, centerY, 200, 200);
 }

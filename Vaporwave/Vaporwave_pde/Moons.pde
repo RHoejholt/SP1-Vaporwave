@@ -1,23 +1,33 @@
 class Moon {
-  int nature;
+  int startX;
   float moonSpeed;
   int t = 0;
   int size;
+  int moonHeight;
+  color moonColor = color(150, 100, 250);
 
   Moon () {
-    size = (int)random(10, 80);
-    nature = (int)random(-5, 5);
-    moonSpeed = random(1, 10);
+    startX = (int)random(0, 1200);
+    size = (int)random(10, 40);
+    moonSpeed = random(-5, 5);
+    moonHeight = (int)random(0, 150);
   }
 
   void drawMoon () {
     pushMatrix();
-    if(t>1220 || t<0){
+    if(t+startX>1220 || t+startX<0){
     moonSpeed*=-1;
     }
-    translate(t, 1000, 240);
+    translate(t+startX, 1100, 180+moonHeight);
+    
+    if(mousePressed){
+      t += moonSpeed*5;
+    } else {
     t += moonSpeed;
-    fill(200, 150, 100);
+    }
+    
+    stroke(moonColor);
+    fill(moonColor);
     sphere(size);
     popMatrix();
   }
