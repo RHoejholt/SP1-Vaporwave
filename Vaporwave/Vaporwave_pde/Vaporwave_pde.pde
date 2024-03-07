@@ -1,21 +1,31 @@
-//todo:
-//clean up code
-//adaptive to window size
+//  please feel free to open up an RGB color picker to play around with all the colors here, and at the top of the Moons class.
+//  hold down mouse1 to fast forward!
 
-int centerY, centerX;
+  //set the starting color and end color of the background gradient
+color startColor = color(225, 24, 200);
+color endColor = color(0, 185, 230);
 
-// set vertex scale of the landscape
+  //set the colors of the landscape grid.
+color gridFill = color(80, 20, 120);
+color gridStroke = color(100, 100, 250);
 
+  //set the color of the sun
+color sunColor = color(255, 245, 190);
+
+  // set vertex scale of the landscape
 int scl = 15;
 
+int centerY, centerX;
 int cols, rows;
 int w, h;
+float sunRadius = 100;
 float hillHeight;
 float moving = 0;
 
 float [][] landscape;
 
-Moon [] moons = new Moon[10];
+  // create moons array, and decide the amount of moons
+Moon [] moons = new Moon[16];
 
 void setup() {
   size(1000, 600, P3D);
@@ -32,7 +42,7 @@ void setup() {
   for (int i = 0; i < moons.length; i++) {
     moons[i] = new Moon();
   }
-  
+
   //Creating the right amount of indexes for the columns and rows for the landscape grid
   landscape = new float[cols][rows];
 }
@@ -64,45 +74,49 @@ void draw () {
 void drawSky() {
 
   //define the start and end colors of the sky
+  drawGradient(1700, height, startColor, endColor);
 
-  color startColor = color(40, 24, 80);
-  color endColor = color(240, 85, 100);
-
-  drawGradient(0, height, startColor, endColor);
-
-  //Draw the sun
-
-  shapeMode(CENTER);
-  fill(255, 200, 150);
-  ellipse(centerX, centerY-160, 200, 200);
-
-  //Draw the lines covering the sun
-
-  drawGradientLines(0, height, startColor, endColor);
+  drawSun();
 }
 void drawGradient (float startY, float endY, color colorStart, color colorEnd) {
+
+  // loops, drawing a line at each y coordiante, since there is no way to outright draw gradients within processing.
   for (int y = int(startY); y < 20*int(endY); y++) {
+
+    // maps y's position within startY and endY within a range of 0-1
     float inter = map(y, startY, endY*10, 0, 1);
+
+    // interpolates the color values relative to the mapped "inter", which is shwoing how far we are between startX and startY, helping us in picking a corresponding color
     color c = lerpColor(colorStart, colorEnd, inter);
     stroke(c);
-    line(-82110, 11111+y, 5*width, y+500, -1000, -1000);
+
+    // the values here are bit high since we need it far into the background.
+    line(-82110, 11111+y, 5*width, y+900, -1000, -1000);
   }
 }
-void drawGradientLines (float startY, float endY, color colorStart, color colorEnd) {
-  for (int y = 0; y < height/1.5; y++) {
-    if (y > centerY+20 && y<centerY+45 || y > centerY+55 && y<centerY+75 ||  y > centerY+80 && y<centerY+95 || y > centerY+100 && y<centerY+102) {
-      float inter = map(y, startY-20, endY-170, 0, 1);
-      color c = lerpColor(colorStart, colorEnd, inter);
-      stroke(c);
-      line(390, y-200, width-390, y-200);
+
+void drawSun() {
+  shapeMode(CENTER);
+  stroke(sunColor);
+  
+    // to see the background through the sun in horizontal lines, and without having to panstakenly draw parts of the background on top of the sun, we instead draw it line by line in a for loop
+    // we can calculate the x coordinates of the startng and ending point with some clever use of maths: 
+    // 1. y - centerY calculates the vertical distance from the center
+    // 2. then we square the circle's radius
+    // 3. then we square the vertical distance, and subtract it from the square of the circle's radius. the result is the distance from the center to the start/endpoint, squared
+    // 4. we take the square root of that value, giving us the actual distance, essentially undoing the two square-operations we did before.
+    // 5. we add/subtract this result from the center to get the end/startpoint.
+    // 6. draw the line :)!
+  for (int y = int(centerY - sunRadius); y <= centerY + sunRadius; y++) {
+    if (!(y > centerY+35 && y<centerY+45 || y > centerY+60 && y<centerY+75 ||  y > centerY+80 && y<centerY+95 || y > centerY+100 && y<centerY+102)) {
+      float x1 = centerX - sqrt(sq(sunRadius) - sq(y - centerY));
+      float x2 = centerX + sqrt(sq(sunRadius) - sq(y - centerY));
+      line(x1, y-170, x2, y-170);
     }
   }
 }
 
-
-
-
-void generateNoiseMap(){
+void generateNoiseMap() {
   // "moving" sets the speed of the landscape
 
   moving -= 0.008;
@@ -112,7 +126,8 @@ void generateNoiseMap(){
   hillHeight = 10;
 
   // perlin noise map generation. perlin noise is preffered over purely random values because there is less chaos, in perlin noise maps, adjacent values are near eachother, which makes them great for simulating landscapes.
-  // xoff and yoff help set the offset on the noise map. if there wasn no increasing offset to the the vertex's "linked" Z coordinate, the landscape would not simulate movement. yoff is multiplied by "moving", allowing us to control the speed of the y axis movement.
+  // xoff and yoff help set the offset on the noise map. if there wasn no increasing offset to the the vertex's "linked" Z coordinate, the landscape would not simulate movement. yoff is multiplied by "moving", allowing us to  
+  // control the speed of the y axis movement.
   // now, we can use a nested for loop to determine Z values for the grid in each draw iteration.
   float yoff = moving;
   for (int y = 0; y < rows; y++) {
@@ -140,15 +155,15 @@ void generateNoiseMap(){
   }
 }
 
-  // the drawGrid function will draw the grid, using the Z values generated from the generateNoiseMap() function.
+// the drawGrid function will draw the grid, using the Z values generated from the generateNoiseMap() function.
 void drawGrid() {
   translate(-w/2, -h/2 +350, -70);
   for (int y = 0; y < rows-1; y++) {
     // we draw a triangle vertex, using the unchanging values for x and y, and the changing Z values from the landscape double array.
     beginShape(TRIANGLE_STRIP);
     for (int x = 0; x< cols; x++) {
-      stroke(100, 100, 250);
-      fill(40, 20, 120);
+      stroke(gridStroke);
+      fill(gridFill);
       vertex(x*scl, y*scl, landscape[x][y]);
       vertex(x*scl, (1+y)*scl, landscape[x][y+1]);
     }
