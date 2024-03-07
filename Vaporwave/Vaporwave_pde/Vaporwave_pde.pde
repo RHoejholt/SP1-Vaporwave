@@ -1,16 +1,15 @@
 //todo:
 //clean up code
 //adaptive to window size
-//moon + cloud behavior and array
 
 int centerY, centerX;
 
-// set vertex scale
+// set vertex scale of the landscape
 
 int scl = 15;
+
 int cols, rows;
 int w, h;
-
 float hillHeight;
 float moving = 0;
 
@@ -18,26 +17,23 @@ float [][] landscape;
 
 Moon [] moons = new Moon[10];
 
-ArrayList<Clouds> clouds = new ArrayList<>();
-
 void setup() {
-  w = 1200;
-  h = 3000;
-  cols = w/scl;
-  rows = h/scl;
-
-
-
-
   size(1000, 600, P3D);
   centerY = height/2;
   centerX = width/2;
 
-  //create moon objects
-  for(int i = 0; i < moons.length; i++){
-  moons[i] = new Moon();
-  }
+  //The height, width and number of rows and columns on the grid is dependant on the window size
+  w = (int)(width*1.2);
+  h =  (int)(height*5);
+  cols = w/scl;
+  rows = h/scl;
 
+  //create moon objects
+  for (int i = 0; i < moons.length; i++) {
+    moons[i] = new Moon();
+  }
+  
+  //Creating the right amount of indexes for the columns and rows for the landscape grid
   landscape = new float[cols][rows];
 }
 void draw () {
@@ -45,57 +41,23 @@ void draw () {
   // Clear the background with a color
   background(255);
 
+  //Lights are required to make the spheres look 3d
   lights();
 
   drawSky();
 
-  //Draw the ground
 
-  // drawGradient(height/1.5, height, 40, 24, 80, 80, 85, 180 );
-
-
-
-  // "moving" sets the speed
-
-  moving -= 0.008;
-
-  // magnitude of hills
-
-  hillHeight = 10;
-
-  // perlin noise map generation
-
-  float yoff = moving;
-  for (int y = 0; y < rows; y++) {
-    float xoff = 0;
-    for (int x = 0; x< cols; x++) {
-      if ( x < 37) {
-        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, 0, hillHeight *(38-x));
-      } else if ( x > 43) {
-        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, hillHeight *(-43+x), 0);
-      } else {
-        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, 0, 0);
-      }
-      xoff += 0.1;
-    }
-    yoff += 0.1;
-    // hold to speed up
-    if (mousePressed) {
-      moving -= 0.001;
-      fill(255);
-      triangle(width-50, 50, width-50, 90, width-30, 70);
-      triangle(width-80, 50, width-80, 90, width-60, 70);
-    }
-  }
-  drawClouds();
-  
+  //rotate the camera to tilt the landscape
   translate(width/2, height/2);
   rotateX(PI/2.5);
 
+  //generate the perlin noise map that with determine the Z coordiantes for each corner in the landscape grid
+  generateNoiseMap();
+
   drawGrid();
 
-  for(Moon m : moons){
-  m.drawMoon();
+  for (Moon m : moons) {
+    m.drawMoon();
   }
 }
 
@@ -139,16 +101,56 @@ void drawGradientLines (float startY, float endY, color colorStart, color colorE
 
 
 
+
+void generateNoiseMap(){
+  // "moving" sets the speed of the landscape
+
+  moving -= 0.008;
+
+  // magnitude of hills
+
+  hillHeight = 10;
+
+  // perlin noise map generation. perlin noise is preffered over purely random values because there is less chaos, in perlin noise maps, adjacent values are near eachother, which makes them great for simulating landscapes.
+  // xoff and yoff help set the offset on the noise map. if there wasn no increasing offset to the the vertex's "linked" Z coordinate, the landscape would not simulate movement. yoff is multiplied by "moving", allowing us to control the speed of the y axis movement.
+  // now, we can use a nested for loop to determine Z values for the grid in each draw iteration.
+  float yoff = moving;
+  for (int y = 0; y < rows; y++) {
+    float xoff = 0;
+    for (int x = 0; x< cols; x++) {
+      // a triple conditional is used to divide the landscape into a left, right and center part, where hillHeight is tied to different values.
+      if ( x < 37) {
+        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, 0, hillHeight *(38-x));
+      } else if ( x > 43) {
+        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, hillHeight *(-43+x), 0);
+      } else {
+        landscape [x] [y] = map(noise(xoff, yoff), 0, 1, 0, 0);
+      }
+      // the offsets will increase in each loop to make sure the entire grid is not tied to the same Z value
+      xoff += 0.1;
+    }
+    yoff += 0.1;
+    // hold to speed up, draws two triangles to show a fast forward effect.
+    if (mousePressed) {
+      moving -= 0.001;
+      fill(255);
+      triangle(width-50, 50, width-50, 90, width-30, 70);
+      triangle(width-80, 50, width-80, 90, width-60, 70);
+    }
+  }
+}
+
+  // the drawGrid function will draw the grid, using the Z values generated from the generateNoiseMap() function.
 void drawGrid() {
   translate(-w/2, -h/2 +350, -70);
   for (int y = 0; y < rows-1; y++) {
+    // we draw a triangle vertex, using the unchanging values for x and y, and the changing Z values from the landscape double array.
     beginShape(TRIANGLE_STRIP);
     for (int x = 0; x< cols; x++) {
       stroke(100, 100, 250);
       fill(40, 20, 120);
       vertex(x*scl, y*scl, landscape[x][y]);
       vertex(x*scl, (1+y)*scl, landscape[x][y+1]);
-      //rect(x * scl, y * scl, scl, scl);
     }
     endShape();
   }
